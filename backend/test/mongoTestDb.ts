@@ -3,6 +3,10 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 
 let mongoServer: MongoMemoryServer | null = null;
 
+type MongooseConnectOptions = NonNullable<
+  Parameters<typeof mongoose.connect>[1]
+>;
+
 export async function connectTestDb() {
   mongoServer = await MongoMemoryServer.create({
     instance: {
@@ -11,9 +15,12 @@ export async function connectTestDb() {
   });
 
   const uri = mongoServer.getUri();
-  await mongoose.connect(uri, {
-    serverSelectionTimeoutMS: 60000,
-  });
+
+  const opts: MongooseConnectOptions = {
+    serverSelectionTimeoutMS: 60_000,
+  } as any;
+
+  await mongoose.connect(uri, opts);
 }
 
 export async function clearTestDb() {
