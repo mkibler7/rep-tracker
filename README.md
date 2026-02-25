@@ -1,9 +1,11 @@
 # SetTracker
 
-SetTracker is a full-stack workout logging application built as a **production-quality portfolio project**. It enables lifters to log workouts quickly (exercises, sets, notes), review training history, and analyze training volume and muscle group distribution over time.
+![CI](https://github.com/mkibler7/set-tracker/actions/workflows/ci.yml/badge.svg)
 
 **Live App:** https://app.set-tracker.com  
 **API:** https://api.set-tracker.com
+
+SetTracker is a full-stack workout logging application built as a **production-quality portfolio project**. It enables lifters to log workouts quickly (exercises, sets, notes), review training history, and analyze training volume and muscle group distribution over time.
 
 ---
 
@@ -102,7 +104,7 @@ Reference:
 
 - [`docs/env.md`](docs/env.md)
 
-### 3) Run the apps
+### 3) Run the app
 
 Frontend:
 
@@ -123,6 +125,18 @@ npm run dev
 Note: In production, the frontend and API are hosted on separate subdomains:
 https://app.set-tracker.com
 https://api.set-tracker.com
+
+---
+
+## Testing
+Backend tests are written with **Vitest** and include API/integration coverage via **Supertest** with an isolated in-memory MongoDB using **MongoMemoryServer**.
+
+**Run tests**
+```bash
+cd backend
+npm test
+```
+![](docs/screenshots/tests.png)
 
 ---
 
