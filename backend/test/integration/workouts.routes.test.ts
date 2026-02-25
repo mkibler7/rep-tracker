@@ -2,9 +2,22 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import request from "supertest";
 import { createApp } from "../../app.js";
 import Workout from "../../src/models/Workout.js";
-import { after } from "node:test";
+import User from "../../src/models/User.js";
 
 const app = createApp();
+
+const getCookieValue = (
+  setCookie: string | string[] | undefined,
+  name: string,
+) => {
+  if (!setCookie) return undefined;
+
+  const arr = Array.isArray(setCookie) ? setCookie : [setCookie];
+  const line = arr.find((c) => c.startsWith(`${name}=`));
+  if (!line) return undefined;
+
+  return line.split(";")[0].slice(name.length + 1);
+};
 
 describe("Workouts routes", () => {
   let agent: ReturnType<typeof request.agent>;
@@ -15,17 +28,38 @@ describe("Workouts routes", () => {
   beforeEach(async () => {
     agent = request.agent(app);
 
-    const res = await agent.post("/auth/register").send({
-      email: `test-${Date.now()}@example.com`,
-      password: "Password123!",
-    });
+    const email = `test-${Date.now()}@test.local`.toLowerCase();
+    const password = "Password123!";
 
-    if (res.status !== 201) {
-      throw new Error(`Register failed: ${res.status} ${res.text}`);
+    const reg = await agent
+      .post("/api/auth/register")
+      .send({ email, password });
+    if (reg.status !== 201) {
+      throw new Error(`Register failed: ${reg.status} ${reg.text}`);
     }
 
-    token = res.body.accessToken;
-    userId = res.body.user.id;
+    // Your schema uses emailVerifiedAt (as we confirmed in auth.routes.test.ts)
+    await User.updateOne({ email }, { $set: { emailVerifiedAt: new Date() } });
+
+    const loginRes = await agent
+      .post("/api/auth/login")
+      .send({ email, password });
+    if (loginRes.status !== 200) {
+      throw new Error(`Login failed: ${loginRes.status} ${loginRes.text}`);
+    }
+
+    // Prefer body token; fallback to cookie-based token if your login uses cookies.
+    token =
+      loginRes.body?.accessToken ??
+      getCookieValue(loginRes.headers["set-cookie"], "at");
+
+    // Prefer user.id from body; fallback to DB _id
+    userId =
+      loginRes.body?.user?.id ??
+      (await User.findOne({ email }).lean())?._id?.toString();
+
+    if (!token) throw new Error("No access token found after login");
+    if (!userId) throw new Error("No userId found after login");
 
     await Workout.deleteMany({ userId });
   });
@@ -38,13 +72,13 @@ describe("Workouts routes", () => {
     req.set("Authorization", `Bearer ${token}`);
 
   it("returns 401 when Authorization header is missing", async () => {
-    const res = await agent.get("/api/workouts");
+    const res = await request(app).get("/api/workouts");
     expect(res.status).toBe(401);
     expect(res.body).toEqual({ message: "Missing access token" });
   });
 
   it("returns 401 when Bearer token is invalid", async () => {
-    const res = await agent
+    const res = await request(app)
       .get("/api/workouts")
       .set("Authorization", "Bearer not-a-real-jwt");
     expect(res.status).toBe(401);
@@ -96,7 +130,7 @@ describe("Workouts routes", () => {
     });
 
     const response = await auth(
-      agent.get(`/api/workouts/${workout._id.toString()}`)
+      agent.get(`/api/workouts/${workout._id.toString()}`),
     );
 
     expect(response.status).toBe(200);
@@ -123,7 +157,7 @@ describe("Workouts routes", () => {
     expect(response.status).toBe(201);
     expect(
       typeof response.body.id === "string" ||
-        typeof response.body._id === "string"
+        typeof response.body._id === "string",
     ).toBe(true);
 
     expect(response.body.muscleGroups).toEqual(["Back", "Chest"]);
@@ -154,7 +188,7 @@ describe("Workouts routes", () => {
     const response = await auth(
       agent
         .put(`/api/workouts/${workout._id.toString()}`)
-        .send({ muscleGroups: [" legs ", "Legs", "Back"] })
+        .send({ muscleGroups: [" legs ", "Legs", "Back"] }),
     );
 
     expect(response.status).toBe(200);
@@ -163,7 +197,7 @@ describe("Workouts routes", () => {
 
   it("PUT /api/workouts/:id returns 400 for invalid id", async () => {
     const res = await auth(
-      agent.put("/api/workouts/not-an-id").send({ muscleGroups: ["Legs"] })
+      agent.put("/api/workouts/not-an-id").send({ muscleGroups: ["Legs"] }),
     );
 
     expect(res.status).toBe(400);
@@ -179,7 +213,7 @@ describe("Workouts routes", () => {
     });
 
     const response = await auth(
-      agent.delete(`/api/workouts/${workout._id.toString()}`)
+      agent.delete(`/api/workouts/${workout._id.toString()}`),
     );
 
     expect(response.status).toBe(200);

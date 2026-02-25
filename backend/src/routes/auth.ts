@@ -29,8 +29,10 @@ import { requireAuth } from "../middleware/requireAuth.js";
 
 const router = Router();
 
-// Apply to all auth routes
-router.use(authLimiter);
+// Apply to all auth routes in non test conditions
+if (process.env.NODE_ENV !== "test") {
+  router.use(authLimiter);
+}
 
 router.post("/register", async (req: Request, res: Response) => {
   const parsed = registerSchema.safeParse(req.body);
@@ -146,46 +148,50 @@ router.post("/demo", async (_req: Request, res: Response) => {
   });
 });
 
-router.post("/login", loginLimiter, async (req: Request, res: Response) => {
-  const parsed = loginSchema.safeParse(req.body);
+router.post(
+  "/login",
+  ...(process.env.NODE_ENV === "test" ? [] : [loginLimiter]),
+  async (req: Request, res: Response) => {
+    const parsed = loginSchema.safeParse(req.body);
 
-  if (!parsed.success)
-    return res.status(400).json({ message: parsed.error.message });
+    if (!parsed.success)
+      return res.status(400).json({ message: parsed.error.message });
 
-  const { email, password } = parsed.data;
+    const { email, password } = parsed.data;
 
-  const user = await User.findOne({ email });
-  if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
-  const ok = await bcrypt.compare(password, user.passwordHash);
-  if (!ok) return res.status(401).json({ message: "Invalid credentials" });
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if (!ok) return res.status(401).json({ message: "Invalid credentials" });
 
-  if (!user.emailVerifiedAt) {
-    return res.status(403).json({ message: "Email not verified" });
-  }
+    if (!user.emailVerifiedAt) {
+      return res.status(403).json({ message: "Email not verified" });
+    }
 
-  const refreshToken = signRefreshToken(String(user._id));
-  const tokenHash = hashToken(refreshToken);
+    const refreshToken = signRefreshToken(String(user._id));
+    const tokenHash = hashToken(refreshToken);
 
-  const days = Number(process.env.REFRESH_TOKEN_TTL_DAYS ?? "30");
-  const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    const days = Number(process.env.REFRESH_TOKEN_TTL_DAYS ?? "30");
+    const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 
-  await RefreshSession.create({ userId: user._id, tokenHash, expiresAt });
+    await RefreshSession.create({ userId: user._id, tokenHash, expiresAt });
 
-  setRefreshCookie(res, refreshToken);
+    setRefreshCookie(res, refreshToken);
 
-  const accessToken = signAccessToken(String(user._id));
-  setAccessCookie(res, accessToken);
-  // setSessionMarkerCookie(res);
+    const accessToken = signAccessToken(String(user._id));
+    setAccessCookie(res, accessToken);
+    // setSessionMarkerCookie(res);
 
-  res.json({
-    user: {
-      id: String(user._id),
-      email: user.email,
-      displayName: user.displayName ?? "",
-    },
-  });
-});
+    res.json({
+      user: {
+        id: String(user._id),
+        email: user.email,
+        displayName: user.displayName ?? "",
+      },
+    });
+  },
+);
 
 router.post("/refresh", async (req: Request, res: Response) => {
   const token = req.cookies?.rt as string | undefined;

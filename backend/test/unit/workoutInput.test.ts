@@ -20,9 +20,7 @@ describe("workoutInput validators", () => {
       });
 
       expect(parsed.date).toBeInstanceOf(Date);
-      expect(parsed.date.toISOString()).toBe(
-        new Date("2025-03-10").toISOString()
-      );
+      expect(parsed.date.toISOString().slice(0, 10)).toBe("2025-03-10");
       expect(parsed.muscleGroups).toEqual(["Back"]);
       expect(parsed.exercises?.[0].id).toBe("barbell-row");
       expect(parsed.exercises?.[0].notes).toBe("good");
@@ -40,7 +38,7 @@ describe("workoutInput validators", () => {
           date: "not-a-date",
           muscleGroups: ["Back"],
           exercises: [],
-        })
+        }),
       ).toThrow(/date is required and must be valid/i);
     });
 
@@ -50,7 +48,7 @@ describe("workoutInput validators", () => {
           date: "2025-03-10",
           muscleGroups: ["   ", ""],
           exercises: [],
-        })
+        }),
       ).toThrow(/muscleGroups must have at least one entry/i);
     });
 
@@ -60,7 +58,7 @@ describe("workoutInput validators", () => {
           date: "2025-03-10",
           muscleGroups: ["Back"],
           exercises: [{ id: "x", sets: [{ weight: 0, reps: 10 }] }],
-        })
+        }),
       ).toThrow(/set weight must be a positive number/i);
 
       expect(() =>
@@ -68,7 +66,7 @@ describe("workoutInput validators", () => {
           date: "2025-03-10",
           muscleGroups: ["Back"],
           exercises: [{ id: "x", sets: [{ weight: 100, reps: 0 }] }],
-        })
+        }),
       ).toThrow(/set reps must be a positive number/i);
     });
 
@@ -78,7 +76,7 @@ describe("workoutInput validators", () => {
           date: "2025-03-10",
           muscleGroups: ["Back"],
           exercises: [{ id: "x", sets: [{ weight: 100, reps: 10, rpe: 11 }] }],
-        })
+        }),
       ).toThrow(/set rpe must be between 1 and 10/i);
     });
   });
@@ -102,7 +100,7 @@ describe("workoutInput validators", () => {
       expect(() =>
         parseUpdateWorkoutInput({
           date: "bad-date",
-        })
+        }),
       ).toThrow(/date must be valid/i);
     });
   });

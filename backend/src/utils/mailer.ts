@@ -33,6 +33,10 @@ function getTransporter() {
 }
 
 export async function sendVerifyEmail(to: string, verifyUrl: string) {
+  if (process.env.NODE_ENV === "test") {
+    return { skipped: true };
+  }
+
   const tx = getTransporter();
 
   await tx.sendMail({
@@ -50,6 +54,9 @@ export async function sendVerifyEmail(to: string, verifyUrl: string) {
 }
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string) {
+  if (process.env.NODE_ENV === "test") {
+    return { skipped: true };
+  }
   const tx = getTransporter();
 
   await tx.sendMail({
