@@ -142,6 +142,7 @@ npm test
 ```bash
 cd backend
 npm run test:coverage
+```
 
 **Current coverage**
 Statements : 82.15%
