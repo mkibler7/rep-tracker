@@ -1,9 +1,15 @@
 import rateLimit from "express-rate-limit";
 
+const num = (key: string, fallback: number) => {
+  const raw = process.env[key];
+  const n = raw ? Number(raw) : NaN;
+  return Number.isFinite(n) ? n : fallback;
+};
+
 // General API limiter (reasonable baseline)
 export const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 300, // 300 requests / 15 min / IP
+  windowMs: num("API_RATE_WINDOW_MS", 15 * 60 * 1000),
+  limit: num("API_RATE_LIMIT", 300),
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => req.method === "OPTIONS",
@@ -12,8 +18,8 @@ export const apiLimiter = rateLimit({
 
 // Auth limiter (stricter)
 export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 30, // 30 auth requests / 15 min / IP
+  windowMs: num("AUTH_RATE_WINDOW_MS", 15 * 60 * 1000),
+  limit: num("AUTH_RATE_LIMIT", 30),
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => req.method === "OPTIONS",
@@ -22,8 +28,8 @@ export const authLimiter = rateLimit({
 
 // Login limiter (strictest)
 export const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 10, // 10 login attempts / 15 min / IP
+  windowMs: num("LOGIN_RATE_WINDOW_MS", 15 * 60 * 1000),
+  limit: num("LOGIN_RATE_LIMIT", 10),
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Too many login attempts. Please try again later." },

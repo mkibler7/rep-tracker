@@ -11,6 +11,16 @@ export default defineConfig({
       "src/**/*.spec.ts",
       "test/**/*.spec.ts",
     ],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html"],
+      reportsDirectory: "coverage",
+      exclude: [
+        "**/src/utils/demoSeed.ts",
+        "**/src/dtos/**",
+        "**/src/utils/mailer.ts",
+      ],
+    },
     setupFiles: ["./test/setup.ts"],
     testTimeout: 120000,
     hookTimeout: 120000,
