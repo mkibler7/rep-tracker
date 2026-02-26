@@ -139,7 +139,7 @@ npm test
 
 | CLI Coverage Report                       | HTML Coverage Report                      |
 | ----------------------------------------- | ----------------------------------------- |
-| ![](docs/screenshots/coverage.png)        | ![](docs/screenshots/mobile-workouts.png) |
+| ![](docs/screenshots/coverage.png)        | ![](docs/screenshots/coverageHTML.png) |
 
 
 ---
