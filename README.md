@@ -136,7 +136,11 @@ Backend tests are written with **Vitest** and include API/integration coverage v
 cd backend
 npm test
 ```
-![](docs/screenshots/tests.png)
+
+| CLI Coverage Report                       | HTML Coverage Report                      |
+| ----------------------------------------- | ----------------------------------------- |
+| ![](docs/screenshots/coverage.png)        | ![](docs/screenshots/mobile-workouts.png) |
+
 
 ---
 
