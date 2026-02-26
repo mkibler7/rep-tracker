@@ -130,6 +130,7 @@ https://api.set-tracker.com
 
 ## Testing
 Backend tests are written with **Vitest** and include API/integration coverage via **Supertest** with an isolated in-memory MongoDB using **MongoMemoryServer**.
+Overall coverage is at 82.15% with 61.24% of branches covered.
 
 **Run tests**
 ```bash
