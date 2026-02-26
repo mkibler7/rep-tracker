@@ -138,9 +138,20 @@ cd backend
 npm test
 ```
 
-| CLI Coverage Report                       | HTML Coverage Report                      |
-| ----------------------------------------- | ----------------------------------------- |
-| ![](docs/screenshots/coverage.png)        | ![](docs/screenshots/coverageHTML.png) |
+**Run w/ coverage**
+```bash
+cd backend
+npm run test:coverage
+
+**Current coverage**
+Statements : 82.15%
+Branches   : 61.24%
+Functions  : 93.20%
+Lines      : 84.77%
+
+| HTML Coverage Report                      |
+| ----------------------------------------- |
+| ![](docs/screenshots/coverageHTML.png) |
 
 
 ---
